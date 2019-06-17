@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TwitchTV-MWV
 // @namespace    http://kuchi.be/
-// @version      1.1
+// @version      1.2
 // @description  Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author       Kuchi - Soft's
 // @icon            https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
