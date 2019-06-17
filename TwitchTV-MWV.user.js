@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         1.3
-// @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
+// @version         1.4
+// @description     Control Twitch volume by scrolling the mouse wheel up and down and auto saving volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
 // @icon            https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -17,7 +17,6 @@
 
 
 (function(window) {
-//settings
 var TwitchPlayer = document.body.querySelector(".player-video video");
 var volume = null;
 var SliderVal = null;
