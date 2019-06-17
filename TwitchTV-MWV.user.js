@@ -16,7 +16,7 @@
 
 
 (function(window) {
-
+//settings
 var TwitchPlayer = document.body.querySelector(".player-video video");
 var volume = null;
 var SliderVal = null;
