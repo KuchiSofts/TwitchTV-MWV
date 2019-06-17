@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         1.5
+// @version         1.6
 // @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -10,7 +10,7 @@
 // @downloadURL     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV.user.js
 // @match           *://*.twitch.tv/*
 // @match           *://*.twitch.tv/videos/*
-// @run-at          document-start
+// @run-at          document-end
 // @grant           none
 // @priority        9000
 // ==/UserScript==
@@ -44,6 +44,7 @@ var TimeOutVol = null;
 
 
 window.addEventListener('wheel', function(e) {
+    blockscroll();
   if (e.deltaY < 0) {
     if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
         TwitchPlayer = document.body.querySelector(".player-video video");
@@ -108,54 +109,75 @@ window.addEventListener('wheel', function(e) {
         console.log(TwitchPlayer.volume);
     }
   }
-    VolDivF.style.opacity = "1";
-    VolDivShow = true;
-    VolDiv.innerHTML = 'Vol: ' + Math.round(volume * 100) + '%';
-    if(VolDivShow){
-    clearInterval(TimeOutVol);
-    TimeOutVol = setTimeout(function(){ VolDivF.style.opacity = "0"; VolDivShow = false;}, 3000);
+    if(VolDivF !== null){
+        VolDivF.style.opacity = "1";
+        VolDivShow = true;
+        VolDiv.innerHTML = 'Vol: ' + Math.round(volume * 100) + '%';
+        if(VolDivShow){
+            clearInterval(TimeOutVol);
+            TimeOutVol = setTimeout(function(){ VolDivF.style.opacity = "0"; VolDivShow = false;}, 3000);
+        }
     }
 
 }, false);
 
+window.addEventListener("keydown",function(e){
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    blockscroll();
+  }
+
+}, false);
+
+
+
+function blockscroll() {
+    if(document.querySelector('div.extension-container') !== null){
+        document.querySelector('div.extension-container').style.display = "none";
+    }
+
+    if(document.querySelector('div.player-overlay') !== null){
+        document.querySelector('div.player-overlay').setAttribute("id", "TopPlayer");
+        document.querySelector('div.player-overlay').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.extension-container') !== null){
+        document.querySelector('div.extension-container').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.player-overlay player-play-overlay js-paused-overlay') !== null){
+        document.querySelector('div.player-overlay player-play-overlay js-paused-overlay').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.player-alert muted-alert-on-ui') !== null){
+        document.querySelector('div.player-alert muted-alert-on-ui').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.js-paused-overlay') !== null){
+        document.querySelector('div.js-paused-overlay').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.player-alert') !== null){
+        document.querySelector('div.player-alert').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.pl-controls-bottom') !== null){
+        document.querySelector('div.pl-controls-bottom').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('iframe') !== null){
+        document.getElementsByTagName("iframe").onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('iframe') !== null){
+        document.getElementsByTagName("iframe").onwheel = function(){ return false; }
+    }
+}
 
     interval = setInterval (function() {
     if('complete' == document.readyState){
-        if(document.querySelector('div.extension-container') !== null){
-            document.querySelector('div.extension-container').style.display = "none";
-        }
-
-        if(document.querySelector('div.player-overlay') !== null){
-            document.querySelector('div.player-overlay').setAttribute("id", "TopPlayer");
-            document.querySelector('div.player-overlay').onwheel = function(){ return false; }
-        }
-
-        if(document.querySelector('div.extension-container') !== null){
-        document.querySelector('div.extension-container').onwheel = function(){ return false; }
-        }
-
-        if(document.querySelector('div.pl-controls-bottom') !== null){
-            document.querySelector('div.pl-controls-bottom').onwheel = function(){ return false; }
-        }
-
-        if(document.querySelector('div.player-play-overlay') !== null){
-            document.querySelector('div.player-play-overlay').onwheel = function(){ return false; }
-        }
-
-        if(document.querySelector('div.player-alert') !== null){
-            document.querySelector('div.player-alert').onwheel = function(){ return false; }
-        }
-
-        if(document.querySelector('div.player-alert muted-alert-on-ui') !== null){
-            document.querySelector('div.player-alert muted-alert-on-ui').onwheel = function(){ return false; }
-        }
-
-        if(document.getElementsByTagName("iframe") !== null){
-            document.getElementsByTagName("iframe").onwheel = function(){ return false; }
-        }
-
-
+        blockscroll();
         TwitchPlayer = document.body.querySelector(".player-video video");
+        TwitchPlayer.addEventListener("pause", blockscroll);
         document.querySelector('div.player-overlay').appendChild(VolDivElement);
         VolDivF = document.querySelector('div.player-overlay');
         VolDiv = document.getElementById('VolDiv');
@@ -174,3 +196,6 @@ console.log("trying ...");
 }
                  , 500);
 })(window);
+
+
+
