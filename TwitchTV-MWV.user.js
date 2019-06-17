@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         1.4
+// @version         1.5
 // @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -45,7 +45,7 @@ var TimeOutVol = null;
 
 window.addEventListener('wheel', function(e) {
   if (e.deltaY < 0) {
-    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container")){
+    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
         TwitchPlayer = document.body.querySelector(".player-video video");
         TwitchPlayer.muted = false;
         volSlider = document.body.querySelector("div.player-volume__slider-container div.player-slider__left");
@@ -77,7 +77,7 @@ window.addEventListener('wheel', function(e) {
   }
 
   if (e.deltaY > 0) {
-    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container")){
+    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
         TwitchPlayer = document.body.querySelector(".player-video video");
         volSlider = document.body.querySelector("div.player-volume__slider-container div.player-slider__left");
         volSliderthumb = document.body.querySelector(".player-volume__slider-thumb");
@@ -122,15 +122,39 @@ window.addEventListener('wheel', function(e) {
     interval = setInterval (function() {
     if('complete' == document.readyState){
         if(document.querySelector('div.extension-container') !== null){
-        document.querySelector('div.extension-container').style.display = "none";
+            document.querySelector('div.extension-container').style.display = "none";
         }
-        document.querySelector('div.player-overlay').setAttribute("id", "TopPlayer");
-        document.querySelector('div.player-overlay').onwheel = function(){ return false; }
+
+        if(document.querySelector('div.player-overlay') !== null){
+            document.querySelector('div.player-overlay').setAttribute("id", "TopPlayer");
+            document.querySelector('div.player-overlay').onwheel = function(){ return false; }
+        }
+
         if(document.querySelector('div.extension-container') !== null){
         document.querySelector('div.extension-container').onwheel = function(){ return false; }
         }
-        document.querySelector('div.pl-controls-bottom').onwheel = function(){ return false; }
-        document.getElementsByTagName("iframe").onwheel = function(){ return false; }
+
+        if(document.querySelector('div.pl-controls-bottom') !== null){
+            document.querySelector('div.pl-controls-bottom').onwheel = function(){ return false; }
+        }
+
+        if(document.querySelector('div.player-play-overlay') !== null){
+            document.querySelector('div.player-play-overlay').onwheel = function(){ return false; }
+        }
+
+        if(document.querySelector('div.player-alert') !== null){
+            document.querySelector('div.player-alert').onwheel = function(){ return false; }
+        }
+
+        if(document.querySelector('div.player-alert muted-alert-on-ui') !== null){
+            document.querySelector('div.player-alert muted-alert-on-ui').onwheel = function(){ return false; }
+        }
+
+        if(document.getElementsByTagName("iframe") !== null){
+            document.getElementsByTagName("iframe").onwheel = function(){ return false; }
+        }
+
+
         TwitchPlayer = document.body.querySelector(".player-video video");
         document.querySelector('div.player-overlay').appendChild(VolDivElement);
         VolDivF = document.querySelector('div.player-overlay');
