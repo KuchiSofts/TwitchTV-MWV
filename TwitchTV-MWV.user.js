@@ -2,7 +2,7 @@
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
 // @version         1.4
-// @description     Control Twitch volume by scrolling the mouse wheel up and down and auto saving volume settings by Kuchi - Soft's
+// @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
 // @icon            https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -17,6 +17,7 @@
 
 
 (function(window) {
+//settings
 var TwitchPlayer = document.body.querySelector(".player-video video");
 var volume = null;
 var SliderVal = null;
@@ -32,7 +33,7 @@ if(localStorage.getItem('TwitchVolume')){
 }
 var interval = null;
 var VolDivElement = document.createElement("div");
-VolDivElement.setAttribute('style', 'text-align: center; height: 37px; color: rgb(255, 0, 0); z-index: 999; font-size: 25px; font-weight: bolder; font-family: cursive; width: 65px; margin: 18% 0px 0px 49%; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;');
+VolDivElement.setAttribute('style', 'display: inline-block; padding: 5px 5px 5px 5px; font-size: 215%; background: rgba(0,0,0,.5); pointer-events: none; border-radius: 3px; text-align: center; height: 70px; color: aliceblue; z-index: 999; font-weight: bolder; font-family: cursive; width: 75px; margin: 18% 0px 0px 49%; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;');
 VolDivElement.setAttribute('id', 'VolDiv');
 VolDivElement.appendChild(document.createTextNode('Vol: ' + Math.round(volume * 100) + '%'));
 
