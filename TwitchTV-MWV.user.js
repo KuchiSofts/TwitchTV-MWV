@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         1.6
+// @version         1.7
 // @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -10,7 +10,7 @@
 // @downloadURL     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV.user.js
 // @match           *://*.twitch.tv/*
 // @match           *://*.twitch.tv/videos/*
-// @run-at          document-end
+// @run-at          document-start
 // @grant           none
 // @priority        9000
 // ==/UserScript==
@@ -46,7 +46,7 @@ var TimeOutVol = null;
 window.addEventListener('wheel', function(e) {
     blockscroll();
   if (e.deltaY < 0) {
-    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
+    if(e.target.className.includes("player-overlay") || e.target.className.includes("tw-absolute") || e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
         TwitchPlayer = document.body.querySelector(".player-video video");
         TwitchPlayer.muted = false;
         volSlider = document.body.querySelector("div.player-volume__slider-container div.player-slider__left");
@@ -78,7 +78,7 @@ window.addEventListener('wheel', function(e) {
   }
 
   if (e.deltaY > 0) {
-    if(e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
+    if(e.target.className.includes("player-overlay") || e.target.className.includes("tw-absolute") || e.target.className.includes("player") || e.target.className.includes("pl-") || 'extension-taskbar' == e.target.className || 'extension-frame' == e.target.className || 'loading' == e.target.className || e.target.className.includes("extension-") || e.target.className.includes("extension-container") || e.target.className.includes("overlay") || e.target.className.includes("js-paused-overlay")){
         TwitchPlayer = document.body.querySelector(".player-video video");
         volSlider = document.body.querySelector("div.player-volume__slider-container div.player-slider__left");
         volSliderthumb = document.body.querySelector(".player-volume__slider-thumb");
@@ -142,6 +142,10 @@ function blockscroll() {
 
     if(document.querySelector('div.extension-container') !== null){
         document.querySelector('div.extension-container').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.tw-absolute') !== null){
+        document.querySelector('div.tw-absolute').onwheel = function(){ return false; }
     }
 
     if(document.querySelector('div.player-overlay player-play-overlay js-paused-overlay') !== null){
