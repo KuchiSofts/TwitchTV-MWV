@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         1.7
+// @version         1.8
 // @description     Control TwitchTV volume by scroll mouse wheel up and down with saving the volume settings by Kuchi - Soft's
 // @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
@@ -144,9 +144,6 @@ function blockscroll() {
         document.querySelector('div.extension-container').onwheel = function(){ return false; }
     }
 
-    if(document.querySelector('div.tw-absolute') !== null){
-        document.querySelector('div.tw-absolute').onwheel = function(){ return false; }
-    }
 
     if(document.querySelector('div.player-overlay player-play-overlay js-paused-overlay') !== null){
         document.querySelector('div.player-overlay player-play-overlay js-paused-overlay').onwheel = function(){ return false; }
@@ -170,6 +167,14 @@ function blockscroll() {
 
     if(document.querySelector('iframe') !== null){
         document.getElementsByTagName("iframe").onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.persistent-player') !== null){
+        document.querySelector('div.persistent-player').onwheel = function(){ return false; }
+    }
+
+    if(document.querySelector('div.extensions-video-overlay-size-container') !== null){
+        document.querySelector('div.extensions-video-overlay-size-container').onwheel = function(){ return false; }
     }
 
     if(document.querySelector('iframe') !== null){
