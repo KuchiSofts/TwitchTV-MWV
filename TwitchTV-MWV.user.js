@@ -2,8 +2,8 @@
 // @name            TwitchTV-MWV v2.0
 // @namespace       http://kuchi.be/
 // @version         2.0
-// @description     Smooth linear volume control with ultra-premium overlay - Crisp icons, refined design, 5% steps with mouse wheel
-// @author          Kuchi - Soft's (Ultra-Premium Edition)
+// @description     Smooth linear volume control with overlay - Crisp icons, refined design, 5% steps with mouse wheel
+// @author          Kuchi - Soft's
 // @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
 // @icon            https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
 // @updateURL       https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV.user.js
