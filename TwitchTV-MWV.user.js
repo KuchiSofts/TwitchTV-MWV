@@ -1,20 +1,20 @@
 // ==UserScript==
-// @name            TwitchTV-MWV v2.0
+// @name            TwitchTV-MWV
 // @namespace       http://kuchi.be/
-// @version         2.0
+// @version         2.1
 // @description     Smooth linear volume control with overlay - Crisp icons, refined design, 5% steps with mouse wheel
 // @author          Kuchi - Soft's
-// @defaulticon     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
-// @icon            https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV-icon.png
-// @updateURL       https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV.user.js
-// @downloadURL     https://github.com/KuchiSofts/TwitchTV-MWV/raw/master/TwitchTV-MWV.user.js
-// @match           *://*.twitch.tv/*
-// @match           *://player.twitch.tv/*
+// @license         MIT
+// @defaulticon     https://raw.githubusercontent.com/KuchiSofts/TwitchTV-MWV/master/TwitchTV-MWV-icon.png
+// @icon            https://raw.githubusercontent.com/KuchiSofts/TwitchTV-MWV/master/TwitchTV-MWV-icon.png
+// @homepageURL     https://github.com/KuchiSofts/TwitchTV-MWV
+// @supportURL      https://github.com/KuchiSofts/TwitchTV-MWV/issues
+// @updateURL       https://raw.githubusercontent.com/KuchiSofts/TwitchTV-MWV/master/TwitchTV-MWV.user.js
+// @downloadURL     https://raw.githubusercontent.com/KuchiSofts/TwitchTV-MWV/master/TwitchTV-MWV.user.js
+// @match           https://*.twitch.tv/*
+// @match           https://player.twitch.tv/*
 // @run-at          document-start
-// @grant           GM_addStyle
-// @grant           GM_getValue
-// @grant           GM_setValue
-// @noframes        false
+// @grant           none
 // ==/UserScript==
 
 
@@ -42,8 +42,7 @@
         overlayTimeout: 1500,
         showDirectionIndicator: true,
         showModeIndicator: true,
-        doubleClickToMute: true,
-        middleClickReset: true,
+        middleClickToMute: true,    // Middle-click on the player = toggle mute
 
         // ============================================
         // 💾 STORAGE SETTINGS
@@ -65,11 +64,13 @@
         shortcuts: {
             mute: 'm',    // M = toggle mute (needs player focus)
             reset: 'r'    // R = reset to 50% (needs player focus)
-            // Arrow Up/Down = ±5% volume (GLOBAL, always works)
+            // Arrow Up/Down = ±5% volume (mouse over the player or player focused, not while typing)
         },
 
-        debug: true
+        debug: false
     };
+
+    const VERSION = '2.1'; // Keep in sync with @version
 
     // ============================================
     // 🎨 STYLES (Ultra-Premium Design)
@@ -300,7 +301,6 @@
         hideTimeout: null,
         initialized: false,
         currentChannel: null,
-        lastClickTime: 0,
         toast: null,
         unmuteAttempts: 0,
         maxUnmuteAttempts: 5,
@@ -312,8 +312,7 @@
         cachedContainer: null,
         lastCacheTime: 0,
         cacheLifetime: 5000,
-        hasUserGesture: false,
-        userGestureTimeout: null
+        pointerTarget: null
     };
 
     // ============================================
@@ -335,6 +334,11 @@
     };
 
     const getCurrentChannel = () => {
+        // Embedded player (player.twitch.tv/?channel=name)
+        if (location.hostname === 'player.twitch.tv') {
+            const embedChannel = new URLSearchParams(location.search).get('channel');
+            return embedChannel ? embedChannel.toLowerCase() : null;
+        }
         const match = window.location.pathname.match(/^\/([^\/]+)/);
         if (match) {
             const channel = match[1].toLowerCase();
@@ -571,6 +575,20 @@
             // Fallback to container check
             const container = this.getContainer();
             return container?.contains(element) || false;
+        },
+
+        // True when the mouse is over the player (or the player has keyboard focus)
+        isPointerOrFocusOnPlayer() {
+            if (!this.getVideo()) return false;
+            const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                                    document.mozFullScreenElement || document.msFullscreenElement);
+            if (isFullscreen) return this.isPlayerElement(document.activeElement || document.body);
+            const container = this.getContainer();
+            if (!container) return false;
+            const pointerEl = state.pointerTarget;
+            const focusEl = document.activeElement;
+            return !!((pointerEl && document.contains(pointerEl) && container.contains(pointerEl)) ||
+                      (focusEl && focusEl !== document.body && container.contains(focusEl)));
         },
 
         getMuteButton() {
@@ -1102,6 +1120,7 @@
             }
 
             if (!isPlayer) return;
+            if (!player.getVideo()) return; // No player on this page - never block scrolling
             if (CONFIG.ignoreHorizontalScroll && Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
             // ALWAYS prevent page scrolling when on video player
@@ -1121,20 +1140,22 @@
         keydown(event) {
             const key = event.key;
 
-            // Handle arrow keys GLOBALLY (always block page scroll, always adjust volume)
+            // Never intercept keys while the user is typing (chat, search, etc.)
+            const activeEl = document.activeElement;
+            const isTyping = activeEl && (
+                activeEl.tagName === 'INPUT' ||
+                activeEl.tagName === 'TEXTAREA' ||
+                activeEl.tagName === 'SELECT' ||
+                activeEl.isContentEditable
+            );
+            if (isTyping || (event.target && event.target.isContentEditable)) return;
+            if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+            // Arrow keys: only when a player exists and the mouse is over it (or it has focus)
             if (key === 'ArrowUp' || key === 'ArrowDown') {
-                // Check if user is typing in an input field
-                const activeEl = document.activeElement;
-                const isTyping = activeEl && (
-                    activeEl.tagName === 'INPUT' ||
-                    activeEl.tagName === 'TEXTAREA' ||
-                    activeEl.isContentEditable
-                );
+                if (!player.isPointerOrFocusOnPlayer()) return;
 
-                // Don't intercept if user is typing
-                if (isTyping) return;
-
-                // ALWAYS prevent default to block page scrolling
+                // Block page scrolling only while controlling the player
                 event.preventDefault();
                 event.stopPropagation();
 
@@ -1182,40 +1203,28 @@
             }
         },
 
-        click(event) {
-            // Track ANY click as user gesture (for unmute permissions)
-            state.hasUserGesture = true;
-            clearTimeout(state.userGestureTimeout);
-            state.userGestureTimeout = setTimeout(() => {
-                state.hasUserGesture = false;
-            }, 5000); // User gesture valid for 5 seconds
-
-            if (!player.isPlayerElement(event.target)) return;
-
-            state.unmuteAttempts = 0;
-            log('User clicked video - unmute ready');
-
-            if (CONFIG.doubleClickToMute) {
-                const now = Date.now();
-                if (now - state.lastClickTime < 300) {
-                    volumeControl.toggle();
-                    state.lastClickTime = 0;
-                } else {
-                    state.lastClickTime = now;
-                }
-            }
+        mousedown(event) {
+            // Prevent the middle-click autoscroll cursor on the player
+            if (event.button !== 1 || !CONFIG.middleClickToMute) return;
+            if (event.target.closest && event.target.closest('a[href]')) return;
+            if (!player.getVideo() || !player.isPlayerElement(event.target)) return;
+            event.preventDefault();
         },
 
         auxclick(event) {
-            if (event.button !== 1) return;
-            if (!player.isPlayerElement(event.target)) return;
+            if (event.button !== 1 || !CONFIG.middleClickToMute) return;
+            // Keep middle-click on links (open in new tab) working
+            if (event.target.closest && event.target.closest('a[href]')) return;
+            if (!player.getVideo() || !player.isPlayerElement(event.target)) return;
 
             state.unmuteAttempts = 0;
+            event.preventDefault();
+            event.stopPropagation();
+            volumeControl.toggle();
+        },
 
-            if (CONFIG.middleClickReset) {
-                event.preventDefault();
-                volumeControl.reset();
-            }
+        pointerover(event) {
+            state.pointerTarget = event.target;
         },
 
         urlChange() {
@@ -1241,7 +1250,7 @@
     const init = () => {
         if (state.initialized) return;
 
-        log('Initializing TwitchMWV v5.0 (Optimized)...');
+        log(`Initializing TwitchMWV v${VERSION}...`);
 
         // Inject styles
         const styleEl = document.createElement('style');
@@ -1251,17 +1260,6 @@
         // Load saved state
         storage.load();
         state.currentChannel = getCurrentChannel();
-
-        // Global click listener to track user gestures (for unmute permission)
-        document.addEventListener('click', () => {
-            state.hasUserGesture = true;
-            clearTimeout(state.userGestureTimeout);
-            state.userGestureTimeout = setTimeout(() => {
-                state.hasUserGesture = false;
-                log('User gesture token expired');
-            }, 5000);
-            log('User gesture detected (click anywhere)');
-        }, { capture: true, passive: true });
 
         // Fullscreen change listener - invalidate cache when entering/exiting fullscreen
         const fullscreenHandler = () => {
@@ -1285,8 +1283,9 @@
         // Event listeners
         window.addEventListener('wheel', handlers.wheel, { passive: false, capture: true });
         window.addEventListener('keydown', handlers.keydown, { capture: true });
-        window.addEventListener('click', handlers.click, { capture: true });
+        window.addEventListener('mousedown', handlers.mousedown, { capture: true });
         window.addEventListener('auxclick', handlers.auxclick, { capture: true });
+        document.addEventListener('pointerover', handlers.pointerover, { capture: true, passive: true });
         window.addEventListener('beforeunload', handlers.beforeUnload);
 
         // URL change observer (optimized)
@@ -1299,43 +1298,6 @@
         });
         urlObserver.observe(document.body, { childList: true, subtree: true });
 
-        // Helper: Auto-click to establish user gesture
-        const autoClickForGesture = () => {
-            const video = player.getVideo();
-            const container = player.getContainer();
-
-            if (video || container) {
-                // Try multiple approaches to establish user gesture
-                const targets = [container, video, document.body].filter(Boolean);
-
-                for (const target of targets) {
-                    try {
-                        // Dispatch a trusted-looking click event
-                        const clickEvent = new MouseEvent('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: 0,
-                            clientY: 0
-                        });
-                        target.dispatchEvent(clickEvent);
-                        log(`Auto-clicked on ${target.tagName || 'container'} to establish gesture`);
-                    } catch (e) {
-                        log('Auto-click failed:', e.message);
-                    }
-                }
-
-                // Set gesture flag
-                state.hasUserGesture = true;
-                clearTimeout(state.userGestureTimeout);
-                state.userGestureTimeout = setTimeout(() => {
-                    state.hasUserGesture = false;
-                }, 10000); // 10 seconds validity
-
-                log('✅ User gesture established via auto-click');
-            }
-        };
-
         // Video element observer (optimized)
         const videoObserver = new MutationObserver(() => {
             const video = player.getVideo();
@@ -1345,14 +1307,11 @@
                 // Restore volume on metadata load
                 video.addEventListener('loadedmetadata', () => {
                     volumeControl.restore();
-                    // Auto-click after video loads to establish gesture
-                    setTimeout(() => autoClickForGesture(), 500);
                 }, { once: true });
 
                 // Also restore immediately if already loaded
                 if (video.readyState >= 1) {
                     volumeControl.restore();
-                    setTimeout(() => autoClickForGesture(), 500);
                 }
 
                 log('Video initialized');
@@ -1361,14 +1320,7 @@
         videoObserver.observe(document.body, { childList: true, subtree: true });
 
         // Initial restore
-        setTimeout(() => {
-            volumeControl.restore();
-            // Try auto-click on initial load
-            autoClickForGesture();
-        }, 1000);
-
-        // Also try auto-click after a longer delay (for slower connections)
-        setTimeout(() => autoClickForGesture(), 2500);
+        setTimeout(() => volumeControl.restore(), 1000);
 
         state.initialized = true;
         log('✓ Ready!');
