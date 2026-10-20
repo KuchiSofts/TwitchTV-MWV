@@ -1121,7 +1121,10 @@
 
             if (!isPlayer) return;
             if (!player.getVideo()) return; // No player on this page - never block scrolling
-            if (CONFIG.ignoreHorizontalScroll && Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            // Windows/Chrome turn Shift+wheel into horizontal scrolling (deltaX, deltaY = 0)
+            const delta = event.shiftKey && event.deltaY === 0 ? event.deltaX : event.deltaY;
+            if (delta === 0) return;
+            if (CONFIG.ignoreHorizontalScroll && !event.shiftKey && Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
             // ALWAYS prevent page scrolling when on video player
             event.preventDefault();
@@ -1129,7 +1132,7 @@
 
             // Get parameters for throttled handler
             const step = volumeControl.getStep(event);
-            const direction = event.deltaY < 0 ? 1 : -1;
+            const direction = delta < 0 ? 1 : -1;
             const video = player.getVideo();
             const muteBtn = player.getMuteButton();
 
